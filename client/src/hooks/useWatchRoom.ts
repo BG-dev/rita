@@ -7,7 +7,7 @@ import { project } from "@shared/time";
 import { decide } from "@shared/reconcile";
 import type { ParsedLink, PlayerAction, RoomState } from "@shared/types";
 
-const WS = import.meta.env.WS_URL ?? window.location.origin;
+const WS = import.meta.env.VITE_WS_URL ?? window.location.origin;
 
 function rpc<T = any>(s: Socket, ev: string, payload: object): Promise<T> {
   return new Promise((resolve, reject) => {
