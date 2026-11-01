@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function Home() {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
@@ -11,16 +11,23 @@ export function Home() {
     setErr(null);
     setBusy(true);
     try {
-      const r = await fetch('/api/rooms', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const API_URL = import.meta.env.WS_URL?.replace(
+        "ws://",
+        "http://",
+      ).replace("wss://", "https://");
+      const r = await fetch(`${API_URL}/api/rooms`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ url }),
       });
       const data = await r.json();
-      if (!r.ok) return setErr('Поддерживаются только rutube.ru и vk.ru / vk.com / vkvideo.ru');
+      if (!r.ok)
+        return setErr(
+          "Поддерживаются только rutube.ru и vk.ru / vk.com / vkvideo.ru",
+        );
       nav(`/r/${data.roomId}`);
     } catch {
-      setErr('Сервер недоступен');
+      setErr("Сервер недоступен");
     } finally {
       setBusy(false);
     }
@@ -35,7 +42,7 @@ export function Home() {
       <input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && create()}
+        onKeyDown={(e) => e.key === "Enter" && create()}
         placeholder="https://rutube.ru/video/… или https://vk.com/video-…"
         className="w-full rounded bg-neutral-900 px-3 py-2 outline-none focus:ring-1 focus:ring-emerald-600"
       />
