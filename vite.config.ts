@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: { '@shared': fileURLToPath(new URL('./shared', import.meta.url)) },
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true
+  }
   server: {
     port: 5173,
     proxy: {
