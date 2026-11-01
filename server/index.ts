@@ -139,4 +139,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
-http.listen(PORT, () => console.log(`server http://localhost:${PORT}`));
+http.listen(PORT, () => console.log(`server started on http://localhost:${PORT}`));
