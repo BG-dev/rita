@@ -24,6 +24,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", FRONTEND_URL);
   res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
@@ -139,4 +140,6 @@ io.on("connection", (socket) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
-http.listen(PORT, () => console.log(`server started on http://localhost:${PORT}`));
+http.listen(PORT, () =>
+  console.log(`server started on http://localhost:${PORT}`),
+);
