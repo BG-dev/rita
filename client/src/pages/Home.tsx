@@ -11,6 +11,7 @@ export function Home() {
     setErr(null);
     setBusy(true);
     try {
+      console.log("WS_URL: ", import.meta.env.WS_URL);
       const API_URL = import.meta.env.WS_URL?.replace(
         "ws://",
         "http://",
