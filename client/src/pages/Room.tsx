@@ -10,6 +10,7 @@ import ActivityFeed from "../components/ActivityFeed";
 import LoadingScreen from "../components/LoadingScreen"; // ★ 1
 import AnimToggle from "../components/AnimToggle"; // ★ 1
 import Chat from "../components/Chat";
+import ThemePicker from "../components/ThemePicker";
 
 const NICK_KEY = "watch:nick";
 
@@ -111,7 +112,7 @@ export function Room() {
           <div className="flex-1 min-w-0">
             <PresenceBar participants={participants} youId={you?.id} />
           </div>
-
+          <ThemePicker />
           <button
             onClick={copyLink}
             className="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700

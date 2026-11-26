@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { sanitizeNick } from "@shared/nick";
-import { randomLolNick } from "../lib/lolNicks";
+import { useTheme } from "../context/ThemeContext";
+import { randomNickFor } from "../lib/nickPool";
 
 export default function NickGate({
   initial,
@@ -9,7 +10,8 @@ export default function NickGate({
   initial?: string;
   onSubmit: (nick: string) => void;
 }) {
-  const [nick, setNick] = useState(initial || randomLolNick());
+  const { theme } = useTheme();
+  const [nick, setNick] = useState(initial || randomNickFor(theme));
   const [err, setErr] = useState<string | null>(null);
 
   const submit = (e: React.FormEvent) => {
@@ -22,49 +24,45 @@ export default function NickGate({
   return (
     <form
       onSubmit={submit}
-      className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4"
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: "var(--bg)", color: "var(--text)" }}
     >
-      <div className="w-full max-w-sm bg-gray-800 rounded-2xl p-6 shadow-xl">
+      <div className="panel w-full max-w-sm p-6">
         <h1 className="text-xl font-semibold mb-1">Как вас зовут?</h1>
-        <p className="text-sm text-gray-400 mb-5">
+        <p className="text-sm mb-5" style={{ color: "var(--muted)" }}>
           Ник увидят остальные в комнате.
         </p>
-
         <div className="flex gap-2 mb-2">
           <input
             value={nick}
+            maxLength={20}
+            autoFocus
             onChange={(e) => {
               setNick(e.target.value);
               setErr(null);
             }}
-            maxLength={20}
-            autoFocus
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-gray-900 border border-gray-700
-                       focus:border-blue-500 outline-none"
+            className="chat__input flex-1"
             placeholder="Ник"
           />
           <button
             type="button"
             onClick={() => {
-              setNick(randomLolNick(nick));
+              setNick(randomNickFor(theme, nick));
               setErr(null);
             }}
-            title="Случайное имя чемпиона League of Legends"
-            className="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition
-                       text-lg leading-none"
+            className="btn"
+            title="Случайное имя"
           >
             🎲
           </button>
         </div>
-
-        <p className="text-xs text-gray-500 mb-4 h-4">
-          {err ?? "Кнопка 🎲 — случайное имя чемпиона LoL"}
+        <p className="text-xs mb-4 h-4" style={{ color: "var(--muted)" }}>
+          {err ?? "Кнопка 🎲 — имя по текущей теме"}
         </p>
-
         <button
           type="submit"
-          className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700
-                     font-medium transition"
+          className="btn w-full"
+          style={{ background: "var(--accent)" }}
         >
           Войти в комнату
         </button>
