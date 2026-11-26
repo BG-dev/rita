@@ -3,7 +3,12 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { nanoid } from "nanoid";
 import { parseLink } from "../shared/link";
-import type { ParsedLink, PlayerAction, RoomState } from "../shared/types";
+import type {
+  ChatMessage,
+  ParsedLink,
+  PlayerAction,
+  RoomState,
+} from "../shared/types";
 import { sanitizeNick, colorFor } from "../shared/nick";
 import type { Activity, ActivityType, Participant } from "../shared/types";
 
@@ -15,10 +20,15 @@ interface Room {
   actorId: string | null;
   participants: Map<string, Participant>; // socket.id -> участник
   activitySeq: number;
+  chat: ChatMessage[]; // последние N сообщений
+  chatSeq: number;
 }
 
 const rooms = new Map<string, Room>();
 const TTL = 1000 * 60 * 60 * 12;
+
+const CHAT_KEEP = 100; // сколько держим в памяти
+const CHAT_MAX_LEN = 500;
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:5173";
 
@@ -55,6 +65,8 @@ app.post("/api/rooms", (req, res) => {
     },
     participants: new Map(),
     activitySeq: 0,
+    chat: [],
+    chatSeq: 0,
   });
   res.json({ roomId: id });
 });
@@ -86,6 +98,24 @@ function broadcastPresence(room: Room) {
       (a, b) => a.joinedAt - b.joinedAt,
     ),
   });
+}
+
+function pushChat(room: Room, p: Participant, raw: string) {
+  const text = raw.replace(/\s+/g, " ").trim().slice(0, CHAT_MAX_LEN);
+  if (!text) return;
+
+  room.chatSeq += 1;
+  const msg: ChatMessage = {
+    id: room.chatSeq,
+    nick: p.nick,
+    color: p.color,
+    text,
+    at: Date.now(),
+  };
+  room.chat.push(msg);
+  if (room.chat.length > CHAT_KEEP) room.chat.shift();
+
+  io.to(room.id).emit("chat:msg", msg);
 }
 
 function pushActivity(
@@ -149,12 +179,22 @@ io.on("connection", (socket) => {
         link: room.link,
         you: p,
         participants: [...room.participants.values()],
+        chat: room.chat,
       });
 
       broadcastPresence(room);
       pushActivity(room, p, "join");
     },
   );
+
+  socket.on("chat:send", ({ text }: { text: string }) => {
+    const room = rooms.get(socket.data.roomId);
+    if (!room) return;
+    const p = room.participants.get(socket.id);
+    if (!p) return;
+    if (typeof text !== "string") return;
+    pushChat(room, p, text);
+  });
 
   socket.on("player:action", (a: PlayerAction) => {
     const room = rooms.get(socket.data.roomId);

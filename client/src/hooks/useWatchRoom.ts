@@ -7,6 +7,7 @@ import { project } from "@shared/time";
 import { decide } from "@shared/reconcile";
 import type {
   Activity,
+  ChatMessage,
   ParsedLink,
   Participant,
   PlayerAction,
@@ -32,6 +33,7 @@ export function useWatchRoom(roomId: string, nick: string | null) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [you, setYou] = useState<Participant | null>(null);
+  const [chat, setChat] = useState<ChatMessage[]>([]);
 
   const clock = useRef(new ServerClock()).current;
   const clientId = useRef(nanoid(8)).current;
@@ -49,6 +51,12 @@ export function useWatchRoom(roomId: string, nick: string | null) {
     },
     [clientId],
   );
+
+  const sendChat = useCallback((text: string) => {
+    const clean = text.trim();
+    if (!clean) return;
+    socket.current?.emit("chat:send", { text: clean });
+  }, []);
 
   const calibrate = useCallback(
     async (s: Socket) => {
@@ -156,6 +164,7 @@ export function useWatchRoom(roomId: string, nick: string | null) {
 
     setStatus("connecting");
     setActivity([]);
+    setChat([]);
     setParticipants([]);
     setYou(null);
     stateRef.current = null;
@@ -175,6 +184,7 @@ export function useWatchRoom(roomId: string, nick: string | null) {
         setState(res.state);
         setLink(res.link);
         setYou(res.you ?? null);
+        if (Array.isArray(res.chat)) setChat(res.chat);
         if (Array.isArray(res.participants)) setParticipants(res.participants);
         setStatus("ok");
       } catch {
@@ -197,6 +207,10 @@ export function useWatchRoom(roomId: string, nick: string | null) {
 
     s.on("activity", (a: Activity) => {
       setActivity((prev) => [...prev.slice(-49), a]);
+    });
+
+    s.on("chat:msg", (m: ChatMessage) => {
+      setChat((prev) => [...prev.slice(-199), m]);
     });
 
     s.on("state", (incoming: RoomState & { originClientId: string }) => {
@@ -249,5 +263,7 @@ export function useWatchRoom(roomId: string, nick: string | null) {
     you,
     serverNow: () => clock.now,
     roomUrl: `${location.origin}/r/${roomId}`,
+    chat,
+    sendChat,
   };
 }

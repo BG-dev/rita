@@ -36,3 +36,11 @@ export interface Activity {
   position?: number;
   at: number;
 }
+
+export interface ChatMessage {
+  id: number; // монотонный в рамках комнаты
+  nick: string;
+  color: string;
+  text: string;
+  at: number; // серверное время
+}

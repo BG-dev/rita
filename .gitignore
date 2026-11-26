@@ -4,4 +4,5 @@ dist
 .env.local
 .DS_Store
 .history
+doka.md
 changes*.md
