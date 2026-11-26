@@ -9,13 +9,9 @@ function describe(a: Activity): string {
     case "leave":
       return "вышел из комнаты";
     case "play":
-      return a.position != null
-        ? `включил с ${fmtTime(a.position)}`
-        : "включил";
+      return "возобновил просмотр";
     case "pause":
-      return a.position != null
-        ? `поставил паузу на ${fmtTime(a.position)}`
-        : "поставил паузу";
+      return "поставил паузу";
     case "seek":
       return a.position != null
         ? `перемотал на ${fmtTime(a.position)}`

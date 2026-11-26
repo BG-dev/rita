@@ -11,7 +11,6 @@ export function Home() {
     setErr(null);
     setBusy(true);
     try {
-      console.log("VITE_WS_URL: ", import.meta.env.WS_URL);
       const API_URL = import.meta.env.VITE_WS_URL?.replace(
         "ws://",
         "http://",

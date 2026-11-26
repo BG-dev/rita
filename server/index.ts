@@ -20,7 +20,7 @@ interface Room {
 const rooms = new Map<string, Room>();
 const TTL = 1000 * 60 * 60 * 12;
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? "";
+const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:5173";
 
 const app = express();
 app.use(express.json());
@@ -240,6 +240,7 @@ io.on("connection", (socket) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
-http.listen(PORT, () =>
-  console.log(`server started on http://localhost:${PORT}`),
-);
+http.listen(PORT, () => {
+  console.log("Mem: ", FRONTEND_URL);
+  console.log(`server started on http://localhost:${PORT}`);
+});
