@@ -68,7 +68,7 @@ export default function LoadingScreen({
 
         {theme === "simple" && <div className="simple-spin" />}
 
-        <h1 className="load__title">WATCH&nbsp;TOGETHER</h1>
+        <h1 className="load__title">WATCH&nbsp;WITH&nbsp;RITA</h1>
         <p className="load__phase">
           {done ? "Открываем сеанс…" : phases[phase]}
         </p>
