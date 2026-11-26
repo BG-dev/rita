@@ -9,6 +9,7 @@ import PresenceBar from "../components/PresenceBar";
 import ActivityFeed from "../components/ActivityFeed";
 import LoadingScreen from "../components/LoadingScreen"; // ★ 1
 import AnimToggle from "../components/AnimToggle"; // ★ 1
+import Chat from "../components/Chat";
 
 const NICK_KEY = "watch:nick";
 
@@ -35,6 +36,8 @@ export function Room() {
     you,
     serverNow,
     roomUrl,
+    chat,
+    sendChat, // ★
   } = useWatchRoom(roomId, nick);
 
   const onSubmitNick = useCallback((n: string) => {
@@ -153,12 +156,16 @@ export function Room() {
         </div>
 
         <aside className="space-y-3">
-          <div className="lol-panel p-3">
-            {" "}
-            {/* ★ 4 панель */}
-            <div className="lol-panel__head mb-2">Что происходит</div>
+          <div className="panel p-3">
+            <div className="panel__head mb-2">Что происходит</div>
             <ActivityFeed items={activity} />
           </div>
+
+          <Chat
+            messages={chat}
+            onSend={sendChat}
+            youNick={you?.nick ?? nick ?? undefined}
+          />
         </aside>
       </main>
     </div>
