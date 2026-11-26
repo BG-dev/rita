@@ -5,33 +5,40 @@ import { ServerClock } from "../lib/clock";
 import type { PlayerAdapter } from "../lib/adapter";
 import { project } from "@shared/time";
 import { decide } from "@shared/reconcile";
-import type { ParsedLink, PlayerAction, RoomState } from "@shared/types";
+import type {
+  Activity,
+  ParsedLink,
+  Participant,
+  PlayerAction,
+  RoomState,
+} from "@shared/types";
 
-const WS = import.meta.env.VITE_WS_URL ?? window.location.origin;
+const WS = import.meta.env.VITE_WS_URL || window.location.origin;
+
+type Status = "idle" | "connecting" | "ok" | "notfound" | "offline";
 
 function rpc<T = any>(s: Socket, ev: string, payload: object): Promise<T> {
   return new Promise((resolve, reject) => {
-    s.timeout(2000).emit(ev, payload, (err: any, res: T) =>
+    s.timeout(4000).emit(ev, payload, (err: any, res: T) =>
       err ? reject(err) : resolve(res),
     );
   });
 }
 
-export function useWatchRoom(roomId: string) {
+export function useWatchRoom(roomId: string, nick: string | null) {
   const [state, setState] = useState<RoomState | null>(null);
   const [link, setLink] = useState<ParsedLink | null>(null);
-  const [status, setStatus] = useState<
-    "connecting" | "ok" | "notfound" | "offline"
-  >("connecting");
+  const [status, setStatus] = useState<Status>("idle");
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [activity, setActivity] = useState<Activity[]>([]);
+  const [you, setYou] = useState<Participant | null>(null);
 
   const clock = useRef(new ServerClock()).current;
   const clientId = useRef(nanoid(8)).current;
   const socket = useRef<Socket | null>(null);
   const adapter = useRef<PlayerAdapter | null>(null);
   const stateRef = useRef<RoomState | null>(null);
-  /** До этого момента не корректируем ничего: ждём ответ сервера. */
   const freeUntil = useRef(0);
-  /** Когда мы последний раз что-то отправляли или применяли. */
   const lastCmd = useRef(0);
   const playAttempts = useRef(0);
 
@@ -69,12 +76,11 @@ export function useWatchRoom(roomId: string) {
     if (a.isAdActive?.()) return;
 
     const now = Date.now();
-    if (now < freeUntil.current) return; // ждём round-trip
-    if (now - lastCmd.current < 800) return; // сами только что действовали
+    if (now < freeUntil.current) return;
+    if (now - lastCmd.current < 800) return;
 
     let acted = false;
 
-    // 1. Позиция. Сначала догоняем, чтобы пауза вставала уже в нужной точке.
     const target = project(st, clock.now);
     const c = decide(target, a.getCurrentTime(), st.isPlaying, a.precision());
     if (c.kind === "seek") {
@@ -86,7 +92,6 @@ export function useWatchRoom(roomId: string) {
       acted = true;
     }
 
-    // 2. Play/pause — по реальному состоянию плеера, а не по событиям.
     const local = a.getPlaying();
     if (local != null) {
       if (st.isPlaying && local === false) {
@@ -112,7 +117,6 @@ export function useWatchRoom(roomId: string) {
       a.on("ready", reconcile);
       a.on("tick", reconcile);
 
-      // Пользователь нажал play/pause внутри плеера.
       a.on("play", () => {
         if (stateRef.current?.isPlaying) return;
         freeUntil.current = Date.now() + 1200;
@@ -130,13 +134,12 @@ export function useWatchRoom(roomId: string) {
         send({ type: "pause", position: a.getCurrentTime() ?? 0 });
       });
 
-      // Перемотка внутри плеера: отправляем и не даём reconcile откатить её назад.
       a.on("seeked", () => {
         const cur = a.getCurrentTime();
         const st = stateRef.current;
         if (cur == null || !st) return;
         const tol = Math.max(1.0, a.precision() * 1.5);
-        if (Math.abs(cur - project(st, clock.now)) <= tol) return; // наш собственный seek
+        if (Math.abs(cur - project(st, clock.now)) <= tol) return; // эхо своей же коррекции
         freeUntil.current = Date.now() + 1500;
         send({ type: "seek", position: cur });
       });
@@ -144,38 +147,70 @@ export function useWatchRoom(roomId: string) {
     [reconcile, send, clock],
   );
 
+  // --- Подключение и вход в комнату ---
   useEffect(() => {
+    if (!nick) {
+      setStatus("idle");
+      return;
+    }
+
+    setStatus("connecting");
+    setActivity([]);
+    setParticipants([]);
+    setYou(null);
+    stateRef.current = null;
+
     const s = io(WS, { transports: ["websocket"] });
     socket.current = s;
 
-    s.on("connect", async () => {
+    const joinRoom = async () => {
       await calibrate(s);
       try {
-        const res = await rpc<any>(s, "room:join", { roomId });
-        if (res?.error) return setStatus("notfound");
+        const res = await rpc<any>(s, "room:join", { roomId, nick });
+        if (res?.error) {
+          setStatus("notfound");
+          return;
+        }
         stateRef.current = res.state;
         setState(res.state);
         setLink(res.link);
+        setYou(res.you ?? null);
+        if (Array.isArray(res.participants)) setParticipants(res.participants);
         setStatus("ok");
       } catch {
         setStatus("offline");
       }
-    });
+    };
 
+    // Вызывается и на первый коннект, и на каждый реконнект.
+    s.on("connect", joinRoom);
     s.on("disconnect", () => setStatus("offline"));
+
+    s.on(
+      "presence",
+      ({ participants: list }: { participants: Participant[] }) => {
+        setParticipants(list);
+        const me = list.find((p) => p.id === s.id);
+        if (me) setYou(me);
+      },
+    );
+
+    s.on("activity", (a: Activity) => {
+      setActivity((prev) => [...prev.slice(-49), a]);
+    });
 
     s.on("state", (incoming: RoomState & { originClientId: string }) => {
       if (stateRef.current && incoming.seq <= stateRef.current.seq) return;
       stateRef.current = incoming;
       setState(incoming);
-      playAttempts.current = 0; // новое указание сервера — снова разрешаем play
+      playAttempts.current = 0;
     });
 
     return () => {
       s.close();
       socket.current = null;
     };
-  }, [roomId, clientId, calibrate]);
+  }, [roomId, nick, calibrate]);
 
   useEffect(() => {
     const tick = setInterval(reconcile, 400);
@@ -209,6 +244,9 @@ export function useWatchRoom(roomId: string) {
     link,
     status,
     attach,
+    participants,
+    activity,
+    you,
     serverNow: () => clock.now,
     roomUrl: `${location.origin}/r/${roomId}`,
   };
