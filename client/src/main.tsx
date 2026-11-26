@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Home } from "./pages/Home";
 import { Room } from "./pages/Room";
 import "./index.css";
+import "./styles/lol.css";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>

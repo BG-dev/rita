@@ -1,10 +1,14 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useWatchRoom } from "../hooks/useWatchRoom";
+import { useMinDelay } from "../hooks/useMinDelay"; // ★ 1
+import { useAnimPref } from "../hooks/useAnimPref"; // ★ 1
 import { Player } from "../components/Player";
 import NickGate from "../components/NickGate";
 import PresenceBar from "../components/PresenceBar";
 import ActivityFeed from "../components/ActivityFeed";
+import LoadingScreen from "../components/LoadingScreen"; // ★ 1
+import AnimToggle from "../components/AnimToggle"; // ★ 1
 
 const NICK_KEY = "watch:nick";
 
@@ -17,6 +21,9 @@ export function Room() {
     localStorage.getItem(NICK_KEY),
   );
   const [copied, setCopied] = useState(false);
+
+  const [anim, toggleAnim] = useAnimPref(); // ★ 2
+  const minElapsed = useMinDelay(3000); // ★ 2  (3 секунды)
 
   const {
     state,
@@ -54,6 +61,20 @@ export function Room() {
     );
   }
 
+  // ★ 3 — ЭКРАН ЗАГРУЗКИ
+  // Условие: держим пока (данные не готовы) ИЛИ (минимум 3 сек не истёк).
+  // notfound/offline показываем сразу — ждать их 3 секунды незачем.
+  const dataReady = status === "ok";
+  const hardError = status === "notfound" || status === "offline";
+  if (!hardError && (!dataReady || !minElapsed)) {
+    // если анимации выключены — минимум времени не держим, сразу пропускаем
+    if (!anim && dataReady) {
+      // проваливаемся дальше к комнате
+    } else {
+      return <LoadingScreen animated={anim} done={dataReady} />;
+    }
+  }
+
   if (status === "notfound") {
     return (
       <div className="min-h-screen grid place-items-center bg-gray-900 text-white p-4">
@@ -75,7 +96,7 @@ export function Room() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <header className="border-b border-gray-800">
+      <header className="lol-header">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           <button
             onClick={() => navigate("/")}
@@ -132,9 +153,11 @@ export function Room() {
         </div>
 
         <aside className="space-y-3">
-          <ActivityFeed items={activity} />
-          <div className="text-xs text-gray-600 px-1">
-            Изменения показываются всем в комнате в реальном времени.
+          <div className="lol-panel p-3">
+            {" "}
+            {/* ★ 4 панель */}
+            <div className="lol-panel__head mb-2">Что происходит</div>
+            <ActivityFeed items={activity} />
           </div>
         </aside>
       </main>

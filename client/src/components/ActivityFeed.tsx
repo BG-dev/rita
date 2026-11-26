@@ -40,7 +40,7 @@ export default function ActivityFeed({ items }: { items: Activity[] }) {
       ) : (
         <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
           {[...items].reverse().map((a) => (
-            <li key={a.id} className="text-sm leading-snug">
+            <li key={a.id} className="lol-enter text-sm leading-snug">
               <span className="font-medium" style={{ color: a.color }}>
                 {a.nick}
               </span>{" "}
