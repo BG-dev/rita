@@ -23,7 +23,7 @@ export function Room() {
   const [copied, setCopied] = useState(false);
 
   const [anim, toggleAnim] = useAnimPref(); // ★ 2
-  const minElapsed = useMinDelay(3000); // ★ 2  (3 секунды)
+  const minElapsed = useMinDelay(5000); // ★ 2  (3 секунды)
 
   const {
     state,

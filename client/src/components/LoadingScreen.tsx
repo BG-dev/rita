@@ -39,7 +39,7 @@ export default function LoadingScreen({
           </div>
         </div>
 
-        <h1 className="lol-loader__title">WATCH&nbsp;TOGETHER</h1>
+        <h1 className="lol-loader__title">WATCH&nbsp;WITH&nbsp;RITA</h1>
 
         <p className="lol-loader__phase">
           {done ? "Открываем сеанс…" : PHASES[phase]}
