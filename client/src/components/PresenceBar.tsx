@@ -1,3 +1,4 @@
+import { parseCrown } from "../lib/crown";
 import type { Participant } from "@shared/types";
 
 export default function PresenceBar({
@@ -7,35 +8,62 @@ export default function PresenceBar({
   participants: Participant[];
   youId?: string;
 }) {
-  if (!participants.length) return null;
-
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-gray-500 mr-1">
+    <div className="flex items-center gap-2 overflow-x-auto">
+      <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
         В комнате: {participants.length}
       </span>
-
       {participants.map((p) => {
-        const isYou = p.id === youId;
+        const { nick, crown } = parseCrown(p.nick);
         return (
-          <span
-            key={p.id}
-            className="inline-flex items-center gap-1.5 pl-1 pr-2.5 py-1
-                       rounded-full bg-gray-800 text-sm"
-            title={p.nick}
-          >
+          <div key={p.id} className="flex items-center gap-1.5 shrink-0">
+            <div className="presence-ava" style={{ background: p.color }}>
+              {nick.charAt(0).toUpperCase()}
+              {crown && (
+                <span className="presence-crown">
+                  <Crown size={13} />
+                </span>
+              )}
+            </div>
             <span
-              className="w-5 h-5 rounded-full grid place-items-center text-[11px]
-                         font-bold text-gray-900"
-              style={{ backgroundColor: p.color }}
+              className="text-sm whitespace-nowrap"
+              style={{ color: "var(--text)" }}
             >
-              {p.nick.trim().charAt(0).toUpperCase()}
+              {nick}
+              {p.id === youId && " (вы)"}
             </span>
-            <span className="text-gray-200">{p.nick}</span>
-            {isYou && <span className="text-gray-500 text-xs">(вы)</span>}
-          </span>
+          </div>
         );
       })}
     </div>
+  );
+}
+
+export function Crown({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-label="корона"
+      className="crown-badge"
+    >
+      <path
+        d="M3 8l3.5 3L12 5l5.5 6L21 8v9H3V8z"
+        fill="url(#crownGold)"
+        stroke="#8a6d1f"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+      <circle cx="3" cy="8" r="1.6" fill="#ffe08a" />
+      <circle cx="12" cy="5" r="1.8" fill="#ffe08a" />
+      <circle cx="21" cy="8" r="1.6" fill="#ffe08a" />
+      <defs>
+        <linearGradient id="crownGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffdf7e" />
+          <stop offset="1" stopColor="#c8930f" />
+        </linearGradient>
+      </defs>
+    </svg>
   );
 }
