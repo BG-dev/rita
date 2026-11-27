@@ -11,6 +11,7 @@ import LoadingScreen from "../components/LoadingScreen"; // ★ 1
 import AnimToggle from "../components/AnimToggle"; // ★ 1
 import Chat from "../components/Chat";
 import ThemePicker from "../components/ThemePicker";
+import RoyalBanner from "../components/RoyalBanner";
 
 const NICK_KEY = "watch:nick";
 
@@ -38,7 +39,8 @@ export function Room() {
     serverNow,
     roomUrl,
     chat,
-    sendChat, // ★
+    sendChat,
+    royal,
   } = useWatchRoom(roomId, nick);
 
   const onSubmitNick = useCallback((n: string) => {
@@ -100,6 +102,7 @@ export function Room() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <RoyalBanner royal={royal} />
       <header className="lol-header">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           <button

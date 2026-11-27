@@ -34,6 +34,9 @@ export function useWatchRoom(roomId: string, nick: string | null) {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [you, setYou] = useState<Participant | null>(null);
   const [chat, setChat] = useState<ChatMessage[]>([]);
+  const [royal, setRoyal] = useState<{ nick: string; key: number } | null>(
+    null,
+  );
 
   const clock = useRef(new ServerClock()).current;
   const clientId = useRef(nanoid(8)).current;
@@ -213,6 +216,11 @@ export function useWatchRoom(roomId: string, nick: string | null) {
       setChat((prev) => [...prev.slice(-199), m]);
     });
 
+    s.on("royal:enter", ({ nick }: { nick: string }) => {
+      // key нужен, чтобы повторный вход (та же королева) перезапустил показ
+      setRoyal({ nick, key: Date.now() });
+    });
+
     s.on("state", (incoming: RoomState & { originClientId: string }) => {
       if (stateRef.current && incoming.seq <= stateRef.current.seq) return;
       stateRef.current = incoming;
@@ -265,5 +273,6 @@ export function useWatchRoom(roomId: string, nick: string | null) {
     roomUrl: `${location.origin}/r/${roomId}`,
     chat,
     sendChat,
+    royal,
   };
 }

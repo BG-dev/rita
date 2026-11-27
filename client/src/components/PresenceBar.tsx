@@ -9,7 +9,10 @@ export default function PresenceBar({
   youId?: string;
 }) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto">
+    <div
+      className="presence-bar flex items-center gap-2"
+      style={{ overflowX: "auto", overflowY: "visible" }}
+    >
       <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
         В комнате: {participants.length}
       </span>

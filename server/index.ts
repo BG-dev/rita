@@ -11,6 +11,7 @@ import type {
 } from "../shared/types";
 import { sanitizeNick, colorFor } from "../shared/nick";
 import type { Activity, ActivityType, Participant } from "../shared/types";
+import { LIZARD_RE } from "../client/src/lib/crown";
 
 interface Room {
   id: string;
@@ -173,6 +174,12 @@ io.on("connection", (socket) => {
       socket.data.roomId = roomId;
       socket.data.nick = name;
       socket.join(roomId);
+
+      if (LIZARD_RE.test(p.nick)) {
+        const cleanNick = p.nick.replace(LIZARD_RE, "").trim() || p.nick;
+
+        io.to(room.id).emit("royal:enter", { nick: cleanNick });
+      }
 
       ack?.({
         state: room.state,

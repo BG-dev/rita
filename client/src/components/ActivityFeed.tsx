@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Activity } from "@shared/types";
 import { fmtTime, timeAgo } from "../lib/format";
+import { parseCrown } from "../lib/crown";
+import { Crown } from "./PresenceBar";
 
 function describe(a: Activity): string {
   switch (a.type) {
@@ -39,17 +41,21 @@ export default function ActivityFeed({ items }: { items: Activity[] }) {
         <p className="text-sm text-gray-500">Пока тихо.</p>
       ) : (
         <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
-          {[...items].reverse().map((a) => (
-            <li key={a.id} className="lol-enter text-sm leading-snug">
-              <span className="font-medium" style={{ color: a.color }}>
-                {a.nick}
-              </span>{" "}
-              <span className="text-gray-300">{describe(a)}</span>
-              <span className="text-gray-600 text-xs ml-1.5">
-                {timeAgo(a.at, now)}
-              </span>
-            </li>
-          ))}
+          {[...items].reverse().map((a) => {
+            const { nick, crown } = parseCrown(a.nick);
+            return (
+              <li key={a.id} className="lol-enter text-sm leading-snug">
+                <span className="font-medium" style={{ color: a.color }}>
+                  {crown && <Crown size={12} />}
+                  {nick}
+                </span>{" "}
+                <span className="text-gray-300">{describe(a)}</span>
+                <span className="text-gray-600 text-xs ml-1.5">
+                  {timeAgo(a.at, now)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
