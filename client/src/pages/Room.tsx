@@ -12,6 +12,7 @@ import AnimToggle from "../components/AnimToggle"; // ★ 1
 import Chat from "../components/Chat";
 import ThemePicker from "../components/ThemePicker";
 import RoyalBanner from "../components/RoyalBanner";
+import { parseCrown } from "../lib/crown";
 
 const NICK_KEY = "watch:nick";
 
@@ -130,7 +131,7 @@ export function Room() {
                        text-sm transition"
             title="Сменить ник"
           >
-            {you?.nick ?? nick} ✎
+            {you?.nick ?? parseCrown(nick).nick} ✎
           </button>
         </div>
       </header>
