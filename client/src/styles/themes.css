@@ -583,11 +583,6 @@ body {
 }
 
 .presence-ava {
-  padding-top: 10px;
-  padding-bottom: 2px;
-}
-
-.presence-ava {
   position: relative;
   width: 28px;
   height: 28px;
@@ -597,18 +592,13 @@ body {
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
-  overflow: visible;
+  flex-shrink: 0;
 }
-.presence-crown {
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-6deg);
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
-  pointer-events: none;
-}
-.crown-badge {
+
+.presence-ava .crown-badge {
   display: block;
+  width: 18px;
+  height: 18px;
 }
 
 /* ===================== БАННЕР «КОРОЛЕВА» ===================== */

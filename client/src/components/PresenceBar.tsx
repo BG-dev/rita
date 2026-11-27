@@ -9,10 +9,7 @@ export default function PresenceBar({
   youId?: string;
 }) {
   return (
-    <div
-      className="presence-bar flex items-center gap-2"
-      style={{ overflowX: "auto", overflowY: "visible" }}
-    >
+    <div className="flex items-center gap-2 overflow-x-auto">
       <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
         В комнате: {participants.length}
       </span>
@@ -21,12 +18,7 @@ export default function PresenceBar({
         return (
           <div key={p.id} className="flex items-center gap-1.5 shrink-0">
             <div className="presence-ava" style={{ background: p.color }}>
-              {nick.charAt(0).toUpperCase()}
-              {crown && (
-                <span className="presence-crown">
-                  <Crown size={13} />
-                </span>
-              )}
+              {crown ? <Crown size={13} /> : nick.charAt(0).toUpperCase()}
             </div>
             <span
               className="text-sm whitespace-nowrap"
