@@ -131,7 +131,7 @@ export function Room() {
                        text-sm transition"
             title="Сменить ник"
           >
-            {you?.nick ?? parseCrown(nick).nick} ✎
+            {you?.nick && parseCrown(nick).nick} ✎
           </button>
         </div>
       </header>
