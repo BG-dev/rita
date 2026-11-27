@@ -17,7 +17,10 @@ export default function PresenceBar({
         const { nick, crown } = parseCrown(p.nick);
         return (
           <div key={p.id} className="flex items-center gap-1.5 shrink-0">
-            <div className="presence-ava" style={{ background: p.color }}>
+            <div
+              className={`presence-ava ${crown ? "presence-ava--royal" : ""}`}
+              style={crown ? undefined : { background: p.color }}
+            >
               {crown ? <Crown size={13} /> : nick.charAt(0).toUpperCase()}
             </div>
             <span
